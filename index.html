@@ -8,10 +8,14 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
   <aside class="sidebar" id="sidebar">
     <div class="brand">
       <div class="brand-icon">▤</div>
-      <div><strong>Arsip IA / SK</strong><small>Document Management</small></div>
+      <div>
+        <strong>Arsip IA / SK</strong>
+        <small>Document Management</small>
+      </div>
     </div>
 
     <nav class="menu">
@@ -24,9 +28,12 @@
     <div class="sidebar-bottom">
       <div class="admin-profile">
         <div class="avatar">A</div>
-        <div><strong>Administrator</strong><small>Admin</small></div>
+        <div>
+          <strong>Administrator</strong>
+          <small>Admin</small>
+        </div>
       </div>
-      <button class="logout-link" id="logoutBtn">⇥ Keluar</button>
+      <button class="logout-link" id="logoutBtn">↪ Keluar</button>
     </div>
   </aside>
 
@@ -37,7 +44,10 @@
         <strong id="topTitle">Beranda</strong>
         <small>Pengelolaan dokumen IA / SK</small>
       </div>
-      <div class="top-right"><span class="status-dot"></span> Mode Demo</div>
+      <div class="top-right">
+        <span class="status-dot"></span>
+        <span>Mode Demo</span>
+      </div>
     </header>
 
     <section class="content">
@@ -55,18 +65,21 @@
           <article class="stat-card">
             <div class="stat-label">Total Dokumen</div>
             <strong id="totalCount">0</strong>
-            <div class="stat-note">Seluruh dokumen di browser ini</div>
+            <div class="stat-note">Seluruh dokumen tersimpan</div>
           </article>
+
           <article class="stat-card">
             <div class="stat-label">Aktif</div>
             <strong id="activeCount">0</strong>
             <div class="stat-note"><span class="dot green"></span>Masih berlaku</div>
           </article>
+
           <article class="stat-card">
             <div class="stat-label">Akan Berakhir</div>
             <strong id="soonCount">0</strong>
             <div class="stat-note"><span class="dot yellow"></span>Dalam 30 hari</div>
           </article>
+
           <article class="stat-card">
             <div class="stat-label">Tidak Aktif</div>
             <strong id="inactiveCount">0</strong>
@@ -82,18 +95,25 @@
             </div>
             <button class="text-button" id="viewAllBtn">Lihat Semua →</button>
           </div>
+
           <div class="table-wrap">
             <table>
               <thead>
                 <tr>
-                  <th>No.</th><th>Nomor IA / SK</th><th>Judul Dokumen</th>
-                  <th>Jenis</th><th>Program</th><th>Departemen</th>
-                  <th>Berlaku Sampai</th><th>Status</th>
+                  <th>No.</th>
+                  <th>Nomor IA / SK</th>
+                  <th>Judul Dokumen</th>
+                  <th>Jenis</th>
+                  <th>Program</th>
+                  <th>Departemen</th>
+                  <th>Berlaku Sampai</th>
+                  <th>Status</th>
                 </tr>
               </thead>
               <tbody id="recentRows"></tbody>
             </table>
           </div>
+
           <div class="empty-state hidden" id="recentEmpty">
             Belum ada dokumen. Klik Tambah Dokumen untuk mulai mengisi arsip.
           </div>
@@ -106,86 +126,109 @@
           <div class="toolbar">
             <div class="searchbox">
               <span>⌕</span>
-              <input id="searchInput" type="search" placeholder="Cari nomor, judul, program, atau departemen...">
+              <input id="searchInput" type="search"
+                placeholder="Cari nomor atau judul dokumen...">
             </div>
+
             <select id="statusFilter">
               <option value="">Semua Status</option>
-              <option>Aktif</option>
-              <option>Akan Berakhir</option>
-              <option>Tidak Aktif</option>
+              <option value="Aktif">Aktif</option>
+              <option value="Akan Berakhir">Akan Berakhir</option>
+              <option value="Tidak Aktif">Tidak Aktif</option>
             </select>
+
             <select id="typeFilter">
               <option value="">Semua Jenis</option>
-              <option>IA</option>
-              <option>SK</option>
+              <option value="IA">IA</option>
+              <option value="SK">SK</option>
             </select>
+
             <button class="btn btn-outline" id="exportBtn">Ekspor CSV</button>
           </div>
+
           <div class="table-wrap">
             <table>
               <thead>
                 <tr>
-                  <th>No.</th><th>Nomor IA / SK</th><th>Judul Dokumen</th>
-                  <th>Jenis</th><th>Program</th><th>Departemen</th>
-                  <th>Tanggal Terbit</th><th>Berlaku Sampai</th><th>Status</th><th>Aksi</th>
+                  <th>No.</th>
+                  <th>Nomor IA / SK</th>
+                  <th>Judul Dokumen</th>
+                  <th>Jenis</th>
+                  <th>Program</th>
+                  <th>Departemen</th>
+                  <th>Tanggal Terbit</th>
+                  <th>Berlaku Sampai</th>
+                  <th>Status</th>
+                  <th>Aksi</th>
                 </tr>
               </thead>
               <tbody id="documentRows"></tbody>
             </table>
           </div>
-          <div class="empty-state hidden" id="documentsEmpty">Data tidak ditemukan.</div>
+
+          <div class="empty-state hidden" id="documentsEmpty">
+            Data tidak ditemukan.
+          </div>
         </section>
       </section>
 
-      <!-- PROGRAM TANPA PENCARIAN -->
+      <!-- PROGRAM: TANPA PENCARIAN DAN TOMBOL TAMBAH -->
       <section id="programPage" class="hidden">
-        <div class="section-action">
-          <button class="btn btn-primary" id="addProgramBtn">＋ Tambah Program</button>
-        </div>
         <section class="panel">
           <div class="panel-head">
             <div>
               <h2>Daftar Program</h2>
-              <p id="programCountLabel">Menampilkan 0 program.</p>
+              <p id="programCountLabel">Menampilkan data program.</p>
             </div>
           </div>
+
           <div class="table-wrap">
             <table class="management-table">
               <thead>
                 <tr>
-                  <th>No</th><th>Nama Program</th><th>Keterangan</th><th>Status</th><th>Aksi</th>
+                  <th>No.</th>
+                  <th>Nama Program</th>
+                  <th>Keterangan</th>
+                  <th>Status</th>
                 </tr>
               </thead>
               <tbody id="programList"></tbody>
             </table>
           </div>
-          <div class="empty-state hidden" id="programEmpty">Belum ada program.</div>
+
+          <div id="programEmpty" class="empty-state hidden">
+            Belum ada data program.
+          </div>
         </section>
       </section>
 
-      <!-- DEPARTEMEN TANPA PENCARIAN -->
+      <!-- DEPARTEMEN: TANPA PENCARIAN DAN TOMBOL TAMBAH -->
       <section id="departemenPage" class="hidden">
-        <div class="section-action">
-          <button class="btn btn-primary" id="addDepartmentBtn">＋ Tambah Departemen</button>
-        </div>
         <section class="panel">
           <div class="panel-head">
             <div>
               <h2>Daftar Departemen</h2>
-              <p id="departmentCountLabel">Menampilkan 0 departemen.</p>
+              <p id="departmentCountLabel">Menampilkan data departemen.</p>
             </div>
           </div>
+
           <div class="table-wrap">
             <table class="management-table">
               <thead>
                 <tr>
-                  <th>No</th><th>Nama Departemen</th><th>Keterangan</th><th>Status</th><th>Aksi</th>
+                  <th>No.</th>
+                  <th>Nama Departemen</th>
+                  <th>Keterangan</th>
+                  <th>Status</th>
                 </tr>
               </thead>
               <tbody id="departmentList"></tbody>
             </table>
           </div>
-          <div class="empty-state hidden" id="departmentEmpty">Belum ada departemen.</div>
+
+          <div id="departmentEmpty" class="empty-state hidden">
+            Belum ada data departemen.
+          </div>
         </section>
       </section>
 
@@ -209,35 +252,51 @@
           <label>Nomor IA / SK
             <input name="number" required placeholder="Contoh: 001/SK/2026">
           </label>
+
           <label>Jenis Dokumen
-            <select name="type">
+            <select name="type" required>
               <option value="IA">IA</option>
               <option value="SK">SK</option>
             </select>
           </label>
+
           <label class="full">Judul Dokumen
             <input name="title" required placeholder="Masukkan judul dokumen">
           </label>
+
           <label>Program
-            <input name="program" required placeholder="Nama program">
+            <select name="program" id="programSelect" required>
+              <option value="">Pilih program</option>
+            </select>
           </label>
+
           <label>Departemen
-            <input name="department" required placeholder="Nama departemen">
+            <select name="department" id="departmentSelect" required>
+              <option value="">Pilih departemen</option>
+            </select>
           </label>
+
           <label>Tanggal Terbit
             <input name="issued" type="date" required>
           </label>
+
           <label>Berlaku Sampai
             <input name="expires" type="date">
           </label>
+
           <label class="full">Keterangan
-            <textarea name="notes" rows="3" placeholder="Keterangan tambahan (opsional)"></textarea>
+            <textarea name="notes" rows="3"
+              placeholder="Keterangan tambahan (opsional)"></textarea>
           </label>
+
           <label class="full">File PDF (opsional)
             <input name="pdf" type="file" accept="application/pdf">
-            <small class="hint">File hanya tersedia sementara di sesi browser.</small>
+            <small class="hint">
+              File hanya tersedia sementara selama sesi browser.
+            </small>
           </label>
         </div>
+
         <div class="modal-actions">
           <button type="button" class="btn btn-outline" id="cancelModal">Batal</button>
           <button type="submit" class="btn btn-primary">Simpan Dokumen</button>
@@ -247,6 +306,7 @@
   </div>
 
   <div class="toast hidden" id="toast"></div>
+
   <script src="app.js"></script>
 </body>
 </html>
