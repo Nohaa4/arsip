@@ -13,18 +13,20 @@
       <div class="brand-icon">▤</div>
       <div><strong>Arsip IA / SK</strong><small>Document Management</small></div>
     </div>
+
     <nav class="menu">
       <button class="menu-link active" data-page="beranda">⌂ &nbsp; Beranda</button>
       <button class="menu-link" data-page="dokumen">▤ &nbsp; Data IA / SK</button>
       <button class="menu-link" data-page="program">▦ &nbsp; Program</button>
       <button class="menu-link" data-page="departemen">▥ &nbsp; Departemen</button>
     </nav>
+
     <div class="sidebar-bottom">
       <div class="admin-profile">
         <div class="avatar">A</div>
         <div><strong>Administrator</strong><small>Admin</small></div>
       </div>
-      <button class="logout-link" id="logoutBtn">Keluar</button>
+      <button class="logout-link" id="logoutBtn">⇥ Keluar</button>
     </div>
   </aside>
 
@@ -47,12 +49,13 @@
         <button class="btn btn-primary" id="addBtn">＋ Tambah Dokumen</button>
       </div>
 
+      <!-- BERANDA -->
       <section id="dashboardPage">
         <div class="stats">
           <article class="stat-card">
             <div class="stat-label">Total Dokumen</div>
             <strong id="totalCount">0</strong>
-            <div class="stat-note">Seluruh dokumen tersimpan di browser ini</div>
+            <div class="stat-note">Seluruh dokumen di browser ini</div>
           </article>
           <article class="stat-card">
             <div class="stat-label">Aktif</div>
@@ -92,24 +95,29 @@
             </table>
           </div>
           <div class="empty-state hidden" id="recentEmpty">
-            Belum ada dokumen. Klik “Tambah Dokumen” untuk mulai mengisi arsip.
+            Belum ada dokumen. Klik Tambah Dokumen untuk mulai mengisi arsip.
           </div>
         </section>
       </section>
 
+      <!-- DATA IA / SK -->
       <section id="documentsPage" class="hidden">
         <section class="panel">
           <div class="toolbar">
             <div class="searchbox">
               <span>⌕</span>
-              <input id="searchInput" type="search" placeholder="Cari nomor atau judul dokumen...">
+              <input id="searchInput" type="search" placeholder="Cari nomor, judul, program, atau departemen...">
             </div>
             <select id="statusFilter">
               <option value="">Semua Status</option>
-              <option>Aktif</option><option>Akan Berakhir</option><option>Tidak Aktif</option>
+              <option>Aktif</option>
+              <option>Akan Berakhir</option>
+              <option>Tidak Aktif</option>
             </select>
             <select id="typeFilter">
-              <option value="">Semua Jenis</option><option>IA</option><option>SK</option>
+              <option value="">Semua Jenis</option>
+              <option>IA</option>
+              <option>SK</option>
             </select>
             <button class="btn btn-outline" id="exportBtn">Ekspor CSV</button>
           </div>
@@ -129,17 +137,55 @@
         </section>
       </section>
 
+      <!-- PROGRAM TANPA PENCARIAN -->
       <section id="programPage" class="hidden">
+        <div class="section-action">
+          <button class="btn btn-primary" id="addProgramBtn">＋ Tambah Program</button>
+        </div>
         <section class="panel">
-          <div class="panel-head"><div><h2>Data Program</h2><p>Daftar program berdasarkan dokumen yang dimasukkan.</p></div></div>
-          <div id="programList" class="simple-list"></div>
+          <div class="panel-head">
+            <div>
+              <h2>Daftar Program</h2>
+              <p id="programCountLabel">Menampilkan 0 program.</p>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="management-table">
+              <thead>
+                <tr>
+                  <th>No</th><th>Nama Program</th><th>Keterangan</th><th>Status</th><th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="programList"></tbody>
+            </table>
+          </div>
+          <div class="empty-state hidden" id="programEmpty">Belum ada program.</div>
         </section>
       </section>
 
+      <!-- DEPARTEMEN TANPA PENCARIAN -->
       <section id="departemenPage" class="hidden">
+        <div class="section-action">
+          <button class="btn btn-primary" id="addDepartmentBtn">＋ Tambah Departemen</button>
+        </div>
         <section class="panel">
-          <div class="panel-head"><div><h2>Data Departemen</h2><p>Daftar departemen berdasarkan dokumen yang dimasukkan.</p></div></div>
-          <div id="departmentList" class="simple-list"></div>
+          <div class="panel-head">
+            <div>
+              <h2>Daftar Departemen</h2>
+              <p id="departmentCountLabel">Menampilkan 0 departemen.</p>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="management-table">
+              <thead>
+                <tr>
+                  <th>No</th><th>Nama Departemen</th><th>Keterangan</th><th>Status</th><th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="departmentList"></tbody>
+            </table>
+          </div>
+          <div class="empty-state hidden" id="departmentEmpty">Belum ada departemen.</div>
         </section>
       </section>
 
@@ -147,19 +193,27 @@
     </section>
   </main>
 
+  <!-- MODAL TAMBAH DOKUMEN -->
   <div class="modal-backdrop hidden" id="modalBackdrop">
     <div class="modal">
       <div class="modal-header">
-        <div><h2>Tambah Dokumen</h2><p>Lengkapi informasi dokumen IA / SK.</p></div>
+        <div>
+          <h2>Tambah Dokumen</h2>
+          <p>Lengkapi informasi dokumen IA / SK.</p>
+        </div>
         <button class="close-btn" id="closeModal">×</button>
       </div>
+
       <form id="documentForm">
         <div class="form-grid">
           <label>Nomor IA / SK
             <input name="number" required placeholder="Contoh: 001/SK/2026">
           </label>
           <label>Jenis Dokumen
-            <select name="type"><option value="IA">IA</option><option value="SK">SK</option></select>
+            <select name="type">
+              <option value="IA">IA</option>
+              <option value="SK">SK</option>
+            </select>
           </label>
           <label class="full">Judul Dokumen
             <input name="title" required placeholder="Masukkan judul dokumen">
@@ -181,7 +235,7 @@
           </label>
           <label class="full">File PDF (opsional)
             <input name="pdf" type="file" accept="application/pdf">
-            <small class="hint">File hanya tersedia selama sesi browser, tidak diunggah ke server.</small>
+            <small class="hint">File hanya tersedia sementara di sesi browser.</small>
           </label>
         </div>
         <div class="modal-actions">
