@@ -1,4 +1,5 @@
 
+/* Proteksi halaman demo */
 if (sessionStorage.getItem("arsipDemoLogin") !== "true") {
   window.location.replace("login.html");
 }
@@ -63,6 +64,7 @@ let departments = JSON.parse(localStorage.getItem(DEPARTMENT_KEY) || "null") || 
 
 const sessionFiles = {};
 
+/* Simpan data pada browser */
 function save() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(docs));
 }
@@ -72,6 +74,7 @@ function saveGroups() {
   localStorage.setItem(DEPARTMENT_KEY, JSON.stringify(departments));
 }
 
+/* Mengamankan teks yang ditampilkan */
 function safe(value) {
   return String(value ?? "").replace(/[&<>"']/g, char => ({
     "&": "&amp;",
@@ -82,12 +85,13 @@ function safe(value) {
   })[char]);
 }
 
+/* Format tanggal */
 function dateText(value) {
   if (!value) return "—";
 
   const date = new Date(value + "T00:00:00");
 
-  if (isNaN(date)) return "—";
+  if (isNaN(date.getTime())) return "—";
 
   return date.toLocaleDateString("id-ID", {
     day: "2-digit",
@@ -96,6 +100,7 @@ function dateText(value) {
   });
 }
 
+/* Status masa berlaku */
 function statusOf(doc) {
   if (!doc.expires) return "Aktif";
 
@@ -107,7 +112,7 @@ function statusOf(doc) {
   if (expiry < today) return "Tidak Aktif";
 
   const difference = Math.ceil(
-    (expiry - today) / 86400000
+    (expiry.getTime() - today.getTime()) / 86400000
   );
 
   return difference <= 30 ? "Akan Berakhir" : "Aktif";
@@ -123,6 +128,7 @@ function pill(status) {
   return `<span class="pill ${cls}">${status}</span>`;
 }
 
+/* Baris tabel dokumen */
 function rowHtml(doc, index, withActions = false) {
   return `
     <tr>
@@ -135,15 +141,19 @@ function rowHtml(doc, index, withActions = false) {
       ${withActions ? `<td>${dateText(doc.issued)}</td>` : ""}
       <td>${dateText(doc.expires)}</td>
       <td>${pill(statusOf(doc))}</td>
+
       ${withActions ? `
         <td>
           <div class="actions">
             ${sessionFiles[doc.id] ? `
               <button class="action-btn"
-                data-action="pdf" data-id="${doc.id}">PDF</button>
+                data-action="pdf"
+                data-id="${doc.id}">PDF</button>
             ` : ""}
+
             <button class="action-btn delete"
-              data-action="delete" data-id="${doc.id}">Hapus</button>
+              data-action="delete"
+              data-id="${doc.id}">Hapus</button>
           </div>
         </td>
       ` : ""}
@@ -151,10 +161,19 @@ function rowHtml(doc, index, withActions = false) {
   `;
 }
 
+/* Dashboard */
 function render() {
-  const active = docs.filter(d => statusOf(d) === "Aktif").length;
-  const soon = docs.filter(d => statusOf(d) === "Akan Berakhir").length;
-  const inactive = docs.filter(d => statusOf(d) === "Tidak Aktif").length;
+  const active = docs.filter(
+    doc => statusOf(doc) === "Aktif"
+  ).length;
+
+  const soon = docs.filter(
+    doc => statusOf(doc) === "Akan Berakhir"
+  ).length;
+
+  const inactive = docs.filter(
+    doc => statusOf(doc) === "Tidak Aktif"
+  ).length;
 
   $("totalCount").textContent = docs.length;
   $("activeCount").textContent = active;
@@ -169,12 +188,16 @@ function render() {
     .map((doc, index) => rowHtml(doc, index))
     .join("");
 
-  $("recentEmpty").classList.toggle("hidden", latest.length > 0);
+  $("recentEmpty").classList.toggle(
+    "hidden",
+    latest.length > 0
+  );
 
   renderDocuments();
   renderGroups();
 }
 
+/* Daftar dokumen beserta pencarian dan filter */
 function renderDocuments() {
   const query = $("searchInput").value.trim().toLowerCase();
   const status = $("statusFilter").value;
@@ -186,7 +209,9 @@ function renderDocuments() {
       doc.title,
       doc.program,
       doc.department
-    ].some(value => String(value).toLowerCase().includes(query));
+    ].some(value =>
+      String(value).toLowerCase().includes(query)
+    );
 
     return matchesQuery &&
       (!status || statusOf(doc) === status) &&
@@ -197,9 +222,13 @@ function renderDocuments() {
     .map((doc, index) => rowHtml(doc, index, true))
     .join("");
 
-  $("documentsEmpty").classList.toggle("hidden", filtered.length > 0);
+  $("documentsEmpty").classList.toggle(
+    "hidden",
+    filtered.length > 0
+  );
 }
 
+/* Tabel Program dan Departemen tanpa tombol aksi */
 function renderGroups() {
   renderGroupTable(
     programs,
@@ -214,14 +243,25 @@ function renderGroups() {
     "departmentList",
     "departmentCountLabel",
     "departmentEmpty",
-    "department"
+    "departemen"
+  );
+
+  fillDropdown(
+    "programSelect",
+    programs,
+    "Pilih program"
+  );
+
+  fillDropdown(
+    "departmentSelect",
+    departments,
+    "Pilih departemen"
   );
 }
 
-function renderGroupTable(list, tbodyId, countId, emptyId, type) {
-  const label = type === "program" ? "program" : "departemen";
-
-  $(countId).textContent = `Menampilkan ${list.length} ${label}.`;
+function renderGroupTable(list, tbodyId, countId, emptyId, label) {
+  $(countId).textContent =
+    `Menampilkan ${list.length} ${label}.`;
 
   $(tbodyId).innerHTML = list.map((item, index) => `
     <tr>
@@ -229,30 +269,41 @@ function renderGroupTable(list, tbodyId, countId, emptyId, type) {
       <td><strong>${safe(item.name)}</strong></td>
       <td>${safe(item.notes || "-")}</td>
       <td>
-        <span class="mini-status ${item.active ? "is-active" : "is-inactive"}">
+        <span class="mini-status ${
+          item.active ? "is-active" : "is-inactive"
+        }">
           ${item.active ? "aktif" : "tidak aktif"}
         </span>
-      </td>
-      <td>
-        <div class="actions">
-          <button class="action-btn edit"
-            data-group-action="edit"
-            data-group="${type}"
-            data-index="${index}"
-            title="Edit">✎</button>
-          <button class="action-btn delete"
-            data-group-action="delete"
-            data-group="${type}"
-            data-index="${index}"
-            title="Hapus">▤</button>
-        </div>
       </td>
     </tr>
   `).join("");
 
-  $(emptyId).classList.toggle("hidden", list.length > 0);
+  $(emptyId).classList.toggle(
+    "hidden",
+    list.length > 0
+  );
 }
 
+/* Isi dropdown dari data Program dan Departemen */
+function fillDropdown(selectId, list, placeholder) {
+  const select = $(selectId);
+  const previousValue = select.value;
+
+  const available = list.filter(item => item.active);
+
+  select.innerHTML = `
+    <option value="">${placeholder}</option>
+    ${available.map(item => `
+      <option value="${safe(item.name)}">${safe(item.name)}</option>
+    `).join("")}
+  `;
+
+  if (available.some(item => item.name === previousValue)) {
+    select.value = previousValue;
+  }
+}
+
+/* Navigasi halaman */
 function showPage(page) {
   const pages = {
     beranda: "dashboardPage",
@@ -266,7 +317,10 @@ function showPage(page) {
   });
 
   document.querySelectorAll(".menu-link").forEach(button => {
-    button.classList.toggle("active", button.dataset.page === page);
+    button.classList.toggle(
+      "active",
+      button.dataset.page === page
+    );
   });
 
   const names = {
@@ -304,6 +358,7 @@ function showPage(page) {
   $("sidebar").classList.remove("open");
 }
 
+/* Modal tambah dokumen */
 function openModal() {
   $("modalBackdrop").classList.remove("hidden");
 }
@@ -322,23 +377,29 @@ function toast(message) {
   }, 2600);
 }
 
-/* Navigasi */
+/* Event navigasi */
 document.querySelectorAll(".menu-link").forEach(button => {
-  button.addEventListener("click", () => showPage(button.dataset.page));
+  button.addEventListener("click", () => {
+    showPage(button.dataset.page);
+  });
 });
 
 $("mobileMenu").addEventListener("click", () => {
   $("sidebar").classList.toggle("open");
 });
 
-$("viewAllBtn").addEventListener("click", () => showPage("dokumen"));
+$("viewAllBtn").addEventListener("click", () => {
+  showPage("dokumen");
+});
 
 $("addBtn").addEventListener("click", openModal);
 $("closeModal").addEventListener("click", closeModal);
 $("cancelModal").addEventListener("click", closeModal);
 
 $("modalBackdrop").addEventListener("click", event => {
-  if (event.target === $("modalBackdrop")) closeModal();
+  if (event.target === $("modalBackdrop")) {
+    closeModal();
+  }
 });
 
 ["searchInput", "statusFilter", "typeFilter"].forEach(id => {
@@ -359,13 +420,21 @@ $("documentForm").addEventListener("submit", event => {
     return;
   }
 
+  const program = data.get("program");
+  const department = data.get("department");
+
+  if (!program || !department) {
+    alert("Silakan pilih Program dan Departemen.");
+    return;
+  }
+
   const doc = {
     id,
     number: data.get("number").trim(),
     type: data.get("type"),
     title: data.get("title").trim(),
-    program: data.get("program").trim(),
-    department: data.get("department").trim(),
+    program,
+    department,
     issued: data.get("issued"),
     expires: data.get("expires"),
     notes: data.get("notes").trim(),
@@ -382,6 +451,7 @@ $("documentForm").addEventListener("submit", event => {
   closeModal();
   render();
   showPage("dokumen");
+
   toast("Dokumen berhasil ditambahkan.");
 });
 
@@ -396,7 +466,7 @@ document.addEventListener("click", event => {
   if (!doc) return;
 
   if (button.dataset.action === "delete") {
-    if (confirm(`Hapus dokumen "${doc.title}"?`)) {
+    if (confirm(`Yakin ingin menghapus dokumen "${doc.title}"?`)) {
       docs = docs.filter(item => item.id !== id);
 
       if (sessionFiles[id]) {
@@ -415,12 +485,19 @@ document.addEventListener("click", event => {
   }
 });
 
-/* Ekspor CSV */
+/* Ekspor data dokumen ke CSV */
 $("exportBtn").addEventListener("click", () => {
   const rows = [
     [
-      "Nomor IA/SK", "Judul", "Jenis", "Program", "Departemen",
-      "Tanggal Terbit", "Berlaku Sampai", "Status", "Keterangan"
+      "Nomor IA/SK",
+      "Judul",
+      "Jenis",
+      "Program",
+      "Departemen",
+      "Tanggal Terbit",
+      "Berlaku Sampai",
+      "Status",
+      "Keterangan"
     ],
     ...docs.map(doc => [
       doc.number,
@@ -450,93 +527,11 @@ $("exportBtn").addEventListener("click", () => {
 
   link.href = url;
   link.download = "data-arsip-ia-sk.csv";
+  document.body.appendChild(link);
   link.click();
+  link.remove();
 
   URL.revokeObjectURL(url);
-});
-
-/* Tambah Program dan Departemen */
-$("addProgramBtn").addEventListener("click", () => addGroup("program"));
-$("addDepartmentBtn").addEventListener("click", () => addGroup("department"));
-
-function addGroup(type) {
-  const isProgram = type === "program";
-  const label = isProgram ? "Program" : "Departemen";
-  const list = isProgram ? programs : departments;
-
-  const name = prompt(`Masukkan nama ${label}:`);
-
-  if (!name || !name.trim()) return;
-
-  if (list.some(item =>
-    item.name.toLowerCase() === name.trim().toLowerCase()
-  )) {
-    alert(`${label} tersebut sudah tersedia.`);
-    return;
-  }
-
-  const notes = prompt("Masukkan keterangan:", "-");
-  if (notes === null) return;
-
-  list.push({
-    name: name.trim(),
-    notes: notes.trim() || "-",
-    active: true
-  });
-
-  saveGroups();
-  renderGroups();
-  toast(`${label} berhasil ditambahkan.`);
-}
-
-/* Edit dan hapus Program atau Departemen */
-document.addEventListener("click", event => {
-  const button = event.target.closest("[data-group-action]");
-  if (!button) return;
-
-  const list = button.dataset.group === "program"
-    ? programs
-    : departments;
-
-  const index = Number(button.dataset.index);
-  const item = list[index];
-
-  if (!item) return;
-
-  if (button.dataset.groupAction === "edit") {
-    const name = prompt("Nama:", item.name);
-    if (!name || !name.trim()) return;
-
-    const notes = prompt("Keterangan:", item.notes || "-");
-    if (notes === null) return;
-
-    if (list.some((other, i) =>
-      i !== index &&
-      other.name.toLowerCase() === name.trim().toLowerCase()
-    )) {
-      alert("Nama tersebut sudah digunakan.");
-      return;
-    }
-
-    item.name = name.trim();
-    item.notes = notes.trim() || "-";
-    item.active = confirm(
-      "Klik OK untuk status aktif, atau Batal untuk tidak aktif."
-    );
-
-    saveGroups();
-    renderGroups();
-    toast("Data berhasil diperbarui.");
-  }
-
-  if (button.dataset.groupAction === "delete") {
-    if (confirm(`Yakin ingin menghapus "${item.name}"?`)) {
-      list.splice(index, 1);
-      saveGroups();
-      renderGroups();
-      toast("Data berhasil dihapus.");
-    }
-  }
 });
 
 /* Keluar */
@@ -547,6 +542,6 @@ $("logoutBtn").addEventListener("click", () => {
   }
 });
 
-/* Tampilkan data awal */
+/* Simpan data awal dan tampilkan halaman */
 saveGroups();
 render();
