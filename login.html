@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -15,9 +16,8 @@
     <form id="loginForm">
       <label for="username">Username</label>
       <input
-        id="username"
-        name="username"
         type="text"
+        id="username"
         placeholder="Masukkan username"
         autocomplete="username"
         required
@@ -25,15 +25,14 @@
 
       <label for="password">Password</label>
       <input
-        id="password"
-        name="password"
         type="password"
+        id="password"
         placeholder="Masukkan password"
         autocomplete="current-password"
         required
       >
 
-      <p class="login-error hidden" id="loginError">
+      <p id="loginError" class="login-error hidden">
         Username atau password salah.
       </p>
 
@@ -42,17 +41,22 @@
   </main>
 
   <script>
+    if (sessionStorage.getItem("arsipDemoLogin") === "true") {
+      window.location.replace("index.html");
+    }
+
     document.getElementById("loginForm").addEventListener("submit", function(event) {
       event.preventDefault();
 
       const username = document.getElementById("username").value.trim();
       const password = document.getElementById("password").value;
+      const error = document.getElementById("loginError");
 
       if (username === "admin" && password === "admin123") {
         sessionStorage.setItem("arsipDemoLogin", "true");
         window.location.href = "index.html";
       } else {
-        document.getElementById("loginError").classList.remove("hidden");
+        error.classList.remove("hidden");
       }
     });
   </script>
