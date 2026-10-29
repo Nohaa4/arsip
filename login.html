@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Arsip IA / SK</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="login-page">
+  <main class="login-card">
+    <div class="login-icon">▤</div>
+    <h1>Arsip IA / SK</h1>
+    <p class="login-subtitle">Document Management System</p>
+
+    <form id="loginForm">
+      <label for="username">Username</label>
+      <input
+        id="username"
+        name="username"
+        type="text"
+        placeholder="Masukkan username"
+        autocomplete="username"
+        required
+      >
+
+      <label for="password">Password</label>
+      <input
+        id="password"
+        name="password"
+        type="password"
+        placeholder="Masukkan password"
+        autocomplete="current-password"
+        required
+      >
+
+      <p class="login-error hidden" id="loginError">
+        Username atau password salah.
+      </p>
+
+      <button type="submit">Masuk</button>
+    </form>
+  </main>
+
+  <script>
+    document.getElementById("loginForm").addEventListener("submit", function(event) {
+      event.preventDefault();
+
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value;
+
+      if (username === "admin" && password === "admin123") {
+        sessionStorage.setItem("arsipDemoLogin", "true");
+        window.location.href = "index.html";
+      } else {
+        document.getElementById("loginError").classList.remove("hidden");
+      }
+    });
+  </script>
+</body>
+</html>
