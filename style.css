@@ -58,10 +58,13 @@ button {
   place-items: center;
   color: #174f7d;
   font-size: 22px;
+  flex-shrink: 0;
 }
 
-.brand strong, .brand small,
-.admin-profile strong, .admin-profile small {
+.brand strong,
+.brand small,
+.admin-profile strong,
+.admin-profile small {
   display: block;
 }
 
@@ -127,6 +130,7 @@ button {
   display: grid;
   place-items: center;
   font-weight: bold;
+  flex-shrink: 0;
 }
 
 .admin-profile strong {
@@ -209,10 +213,12 @@ button {
 .page-heading h1 {
   font-size: 22px;
   margin: 0 0 8px;
+  font-weight: 700;
   color: #20384d;
 }
 
-.page-heading p, .panel-head p {
+.page-heading p,
+.panel-head p {
   margin: 0;
   color: var(--muted);
   font-size: 12px;
@@ -229,7 +235,7 @@ button {
 
 .btn-primary {
   background: var(--blue);
-  color: white;
+  color: #fff;
 }
 
 .btn-primary:hover {
@@ -267,6 +273,7 @@ button {
 .stat-card strong {
   display: block;
   font-size: 28px;
+  line-height: 1.1;
   color: #20384d;
 }
 
@@ -284,9 +291,17 @@ button {
   margin-right: 5px;
 }
 
-.green { background: #2e9d67; }
-.yellow { background: #e5ad28; }
-.red { background: #d84e4e; }
+.green {
+  background: #2e9d67;
+}
+
+.yellow {
+  background: #e5ad28;
+}
+
+.red {
+  background: #d84e4e;
+}
 
 .panel {
   background: #fff;
@@ -403,16 +418,10 @@ tbody tr:last-child td {
   font-size: 10px;
 }
 
-.action-btn.edit {
-  background: #fff2d9;
-  border-color: #ffebc2;
-  color: #a56b00;
-}
-
 .action-btn.delete {
+  color: #b64242;
   background: #fdeaea;
   border-color: #f8dada;
-  color: #b83232;
 }
 
 .toolbar {
@@ -467,20 +476,7 @@ select {
   display: none !important;
 }
 
-.section-action {
-  display: flex;
-  justify-content: flex-start;
-  margin: -5px 0 12px;
-}
-
-.section-action .btn {
-  background: #1c527f;
-}
-
-.section-action .btn:hover {
-  background: #17466e;
-}
-
+/* Tabel Program dan Departemen */
 .management-table {
   min-width: 650px;
 }
@@ -530,6 +526,7 @@ footer span {
   padding: 0 5px;
 }
 
+/* Modal */
 .modal-backdrop {
   position: fixed;
   inset: 0;
@@ -573,6 +570,7 @@ footer span {
   background: none;
   font-size: 25px;
   color: #748393;
+  line-height: 1;
 }
 
 form {
@@ -594,7 +592,9 @@ form {
   color: #43586b;
 }
 
-.form-grid input, .form-grid select, .form-grid textarea {
+.form-grid input,
+.form-grid select,
+.form-grid textarea {
   width: 100%;
   min-height: 38px;
   border: 1px solid #d5dfe8;
@@ -648,6 +648,86 @@ form {
   background: none;
   font-size: 20px;
   color: var(--navy);
+}
+
+/* Halaman Login */
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: #edf2f6;
+}
+
+.login-card {
+  width: min(410px, 100%);
+  background: #fff;
+  border-radius: 9px;
+  padding: 38px;
+  box-shadow: 0 8px 28px #172f4517;
+}
+
+.login-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
+  background: #1c527f;
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 25px;
+  margin-bottom: 20px;
+}
+
+.login-card h1 {
+  font-size: 25px;
+  margin: 0 0 6px;
+  color: #17466e;
+}
+
+.login-subtitle {
+  margin: 0 0 30px;
+  color: #61758a;
+  font-size: 16px;
+}
+
+.login-card label {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: #20384d;
+  margin-bottom: 8px;
+}
+
+.login-card input {
+  width: 100%;
+  height: 42px;
+  border: 1px solid #cbd6e1;
+  border-radius: 5px;
+  padding: 0 12px;
+  font-size: 14px;
+  margin-bottom: 18px;
+}
+
+.login-card button {
+  width: 100%;
+  height: 40px;
+  border: 0;
+  border-radius: 5px;
+  background: #1c527f;
+  color: #fff;
+  font-weight: 700;
+}
+
+.login-card button:hover {
+  background: #17466e;
+}
+
+.login-error {
+  color: #b42318;
+  font-size: 12px;
+  margin: -8px 0 12px;
 }
 
 @media (max-width: 1100px) {
@@ -737,87 +817,12 @@ form {
     padding: 10px;
   }
 
-  .modal-header, form {
+  .modal-header,
+  form {
     padding: 18px;
   }
-}
 
-/* Halaman Login */
-.login-page {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-  background: #edf2f6;
-}
-
-.login-card {
-  width: min(410px, 100%);
-  background: #fff;
-  border-radius: 9px;
-  padding: 38px;
-  box-shadow: 0 8px 28px #172f4517;
-}
-
-.login-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 6px;
-  background: #1c527f;
-  color: #fff;
-  display: grid;
-  place-items: center;
-  font-size: 25px;
-  margin-bottom: 20px;
-}
-
-.login-card h1 {
-  font-size: 25px;
-  margin: 0 0 6px;
-  color: #17466e;
-}
-
-.login-subtitle {
-  margin: 0 0 30px;
-  color: #61758a;
-  font-size: 16px;
-}
-
-.login-card label {
-  display: block;
-  font-size: 13px;
-  font-weight: 700;
-  color: #20384d;
-  margin-bottom: 8px;
-}
-
-.login-card input {
-  width: 100%;
-  height: 42px;
-  border: 1px solid #cbd6e1;
-  border-radius: 5px;
-  padding: 0 12px;
-  font-size: 14px;
-  margin-bottom: 18px;
-}
-
-.login-card button {
-  width: 100%;
-  height: 40px;
-  border: 0;
-  border-radius: 5px;
-  background: #1c527f;
-  color: #fff;
-  font-weight: 700;
-}
-
-.login-card button:hover {
-  background: #17466e;
-}
-
-.login-error {
-  color: #b42318;
-  font-size: 12px;
-  margin: -8px 0 12px;
+  .login-card {
+    padding: 28px;
+  }
 }
