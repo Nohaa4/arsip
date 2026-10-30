@@ -1,296 +1,164 @@
-
-/* Proteksi halaman demo */
-if (sessionStorage.getItem("arsipDemoLogin") !== "true") {
-  window.location.replace("login.html");
-}
-
-const $ = id => document.getElementById(id);
-
 const STORAGE_KEY = "arsip_ia_sk_demo_v1";
-const PROGRAM_KEY = "arsip_demo_programs";
-const DEPARTMENT_KEY = "arsip_demo_departments";
 
-let docs = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null") || [
-  {
-    id: 1,
-    number: "001/IA/2026",
-    title: "Implementasi Kerja Sama Akademik",
-    type: "IA",
-    program: "Informatika",
-    department: "Departemen Akademik",
-    issued: "2026-01-15",
-    expires: "2027-01-15",
-    notes: "",
-    fileName: ""
-  },
-  {
-    id: 2,
-    number: "012/SK/2025",
-    title: "Penetapan Tim Pengelola Dokumen",
-    type: "SK",
-    program: "Administrasi",
-    department: "Departemen Umum",
-    issued: "2025-11-20",
-    expires: "2026-11-10",
-    notes: "",
-    fileName: ""
-  },
-  {
-    id: 3,
-    number: "004/IA/2024",
-    title: "Perjanjian Kerja Sama Institusi",
-    type: "IA",
-    program: "Manajemen",
-    department: "Departemen Kerja Sama",
-    issued: "2024-05-01",
-    expires: "2026-05-01",
-    notes: "",
-    fileName: ""
-  }
-];
+const defaultData = {
+  documents: [],
+  programs: [
+    {
+      id: "p1",
+      name: "Program Kerja Sama",
+      notes: "Program kerja sama",
+      status: "Aktif"
+    },
+    {
+      id: "p2",
+      name: "Program Pendidikan",
+      notes: "Program pendidikan",
+      status: "Aktif"
+    }
+  ],
+  departments: [
+    {
+      id: "d1",
+      name: "Departemen Akademik",
+      notes: "Pengelolaan akademik",
+      status: "Aktif"
+    },
+    {
+      id: "d2",
+      name: "Departemen Kerja Sama",
+      notes: "Pengelolaan kerja sama",
+      status: "Aktif"
+    }
+  ]
+};
 
-let programs = JSON.parse(localStorage.getItem(PROGRAM_KEY) || "null") || [
-  { name: "Admin", notes: "-", active: true },
-  { name: "Dealer Support", notes: "-", active: true },
-  { name: "Quality Control", notes: "-", active: true }
-];
+let data = loadData();
+let toastTimer;
 
-let departments = JSON.parse(localStorage.getItem(DEPARTMENT_KEY) || "null") || [
-  { name: "Testing", notes: "-", active: true },
-  { name: "Finance", notes: "-", active: true },
-  { name: "QC", notes: "-", active: true },
-  { name: "Sales", notes: "-", active: true }
-];
+function loadData() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
 
-const sessionFiles = {};
+    if (
+      saved &&
+      Array.isArray(saved.documents) &&
+      Array.isArray(saved.programs) &&
+      Array.isArray(saved.departments)
+    ) {
+      return saved;
+    }
+  } catch (error) {}
 
-/* Simpan data */
-function save() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(docs));
+  return structuredClone(defaultData);
 }
 
-function saveGroups() {
-  localStorage.setItem(PROGRAM_KEY, JSON.stringify(programs));
-  localStorage.setItem(DEPARTMENT_KEY, JSON.stringify(departments));
+function saveData() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 }
 
-/* Amankan teks */
-function safe(value) {
-  return String(value ?? "").replace(/[&<>"']/g, char => ({
+function escapeHTML(value = "") {
+  return String(value).replace(/[&<>"']/g, char => ({
     "&": "&amp;",
     "<": "&lt;",
     ">": "&gt;",
     '"': "&quot;",
-    "'": "&#39;"
-  })[char]);
+    "'": "&#039;"
+  }[char]));
 }
 
-/* Format tanggal */
-function dateText(value) {
-  if (!value) return "—";
+function formatDate(value) {
+  if (!value) return "-";
 
   const date = new Date(value + "T00:00:00");
 
-  if (isNaN(date.getTime())) return "—";
-
-  return date.toLocaleDateString("id-ID", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric"
-  });
+  return Number.isNaN(date.getTime())
+    ? "-"
+    : date.toLocaleDateString("id-ID", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric"
+      });
 }
 
-/* Status masa berlaku */
-function statusOf(doc) {
-  if (!doc.expires) return "Aktif";
+function getStatus(expiry) {
+  if (!expiry) return "Aktif";
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const expiry = new Date(doc.expires + "T00:00:00");
+  const end = new Date(expiry + "T00:00:00");
+  const diff = Math.ceil((end - today) / 86400000);
 
-  if (expiry < today) return "Tidak Aktif";
+  if (diff < 0) return "Tidak Aktif";
+  if (diff <= 30) return "Akan Berakhir";
 
-  const difference = Math.ceil(
-    (expiry.getTime() - today.getTime()) / 86400000
-  );
-
-  return difference <= 30 ? "Akan Berakhir" : "Aktif";
+  return "Aktif";
 }
 
-/* Label status */
-function pill(status) {
-  const cls = status === "Aktif"
-    ? "active"
-    : status === "Akan Berakhir"
+function statusPill(status) {
+  const cls =
+    status === "Aktif"
+      ? "active"
+      : status === "Akan Berakhir"
       ? "soon"
       : "inactive";
 
-  return `<span class="pill ${cls}">${status}</span>`;
+  return `<span class="pill ${cls}">${escapeHTML(status)}</span>`;
 }
 
-/* Tabel dokumen: tombol Lihat PDF dan Hapus */
-function rowHtml(doc, index, withActions = false) {
-  return `
-    <tr>
-      <td>${index + 1}</td>
-      <td><span class="doc-number">${safe(doc.number)}</span></td>
-      <td>${safe(doc.title)}</td>
-      <td>${safe(doc.type)}</td>
-      <td>${safe(doc.program)}</td>
-      <td>${safe(doc.department)}</td>
-      ${withActions ? `<td>${dateText(doc.issued)}</td>` : ""}
-      <td>${dateText(doc.expires)}</td>
-      <td>${pill(statusOf(doc))}</td>
+function showToast(message) {
+  const toast = document.getElementById("toast");
 
-      ${withActions ? `
-        <td>
-          <div class="actions">
-            <button class="action-btn"
-              data-action="pdf"
-              data-id="${doc.id}">
-              Lihat PDF
-            </button>
+  toast.textContent = message;
+  toast.classList.remove("hidden");
 
-            <button class="action-btn delete"
-              data-action="delete"
-              data-id="${doc.id}">
-              Hapus
-            </button>
-          </div>
-        </td>
-      ` : ""}
-    </tr>
-  `;
+  clearTimeout(toastTimer);
+
+  toastTimer = setTimeout(() => {
+    toast.classList.add("hidden");
+  }, 2800);
 }
 
-/* Dashboard */
-function render() {
-  $("totalCount").textContent = docs.length;
-
-  $("activeCount").textContent = docs.filter(
-    doc => statusOf(doc) === "Aktif"
-  ).length;
-
-  $("soonCount").textContent = docs.filter(
-    doc => statusOf(doc) === "Akan Berakhir"
-  ).length;
-
-  $("inactiveCount").textContent = docs.filter(
-    doc => statusOf(doc) === "Tidak Aktif"
-  ).length;
-
-  const latest = [...docs]
-    .sort((a, b) => b.id - a.id)
-    .slice(0, 10);
-
-  $("recentRows").innerHTML = latest
-    .map((doc, index) => rowHtml(doc, index))
-    .join("");
-
-  $("recentEmpty").classList.toggle(
-    "hidden",
-    latest.length > 0
-  );
-
-  renderDocuments();
-  renderGroups();
+function openModal(id) {
+  document.getElementById(id).classList.remove("hidden");
 }
 
-/* Daftar dokumen dengan filter */
-function renderDocuments() {
-  const query = $("searchInput").value.trim().toLowerCase();
-  const status = $("statusFilter").value;
-  const type = $("typeFilter").value;
-
-  const filtered = docs.filter(doc => {
-    const matchesQuery = !query || [
-      doc.number,
-      doc.title,
-      doc.program,
-      doc.department
-    ].some(value =>
-      String(value).toLowerCase().includes(query)
-    );
-
-    return matchesQuery &&
-      (!status || statusOf(doc) === status) &&
-      (!type || doc.type === type);
-  }).sort((a, b) => b.id - a.id);
-
-  $("documentRows").innerHTML = filtered
-    .map((doc, index) => rowHtml(doc, index, true))
-    .join("");
-
-  $("documentsEmpty").classList.toggle(
-    "hidden",
-    filtered.length > 0
-  );
+function closeModal(id) {
+  document.getElementById(id).classList.add("hidden");
 }
 
-/* Data Program dan Departemen */
-function renderGroups() {
-  renderGroupTable(
-    programs,
-    "programList",
-    "programCountLabel",
-    "programEmpty",
-    "program"
-  );
-
-  renderGroupTable(
-    departments,
-    "departmentList",
-    "departmentCountLabel",
-    "departmentEmpty",
-    "departemen"
-  );
-
-  fillDropdown("programSelect", programs, "Pilih program");
-  fillDropdown("departmentSelect", departments, "Pilih departemen");
+function byId(id) {
+  return document.getElementById(id);
 }
 
-function renderGroupTable(list, tbodyId, countId, emptyId, label) {
-  $(countId).textContent = `Menampilkan ${list.length} ${label}.`;
+/* NAVIGASI HALAMAN */
 
-  $(tbodyId).innerHTML = list.map((item, index) => `
-    <tr>
-      <td>${index + 1}</td>
-      <td><strong>${safe(item.name)}</strong></td>
-      <td>${safe(item.notes || "-")}</td>
-      <td>
-        <span class="mini-status ${
-          item.active ? "is-active" : "is-inactive"
-        }">
-          ${item.active ? "aktif" : "tidak aktif"}
-        </span>
-      </td>
-    </tr>
-  `).join("");
+const pageInfo = {
+  beranda: [
+    "Beranda",
+    "Selamat datang, Admin",
+    "Berikut ringkasan pengelolaan dokumen IA / SK."
+  ],
 
-  $(emptyId).classList.toggle("hidden", list.length > 0);
-}
+  dokumen: [
+    "Data IA / SK",
+    "Data IA / SK",
+    "Kelola, cari, dan lihat dokumen IA / SK."
+  ],
 
-/* Dropdown Program dan Departemen */
-function fillDropdown(selectId, list, placeholder) {
-  const select = $(selectId);
-  const previousValue = select.value;
+  program: [
+    "Program",
+    "Program",
+    "Kelola daftar program yang tersedia."
+  ],
 
-  const available = list.filter(item => item.active);
+  departemen: [
+    "Departemen",
+    "Departemen",
+    "Kelola daftar departemen yang tersedia."
+  ]
+};
 
-  select.innerHTML = `
-    <option value="">${placeholder}</option>
-    ${available.map(item => `
-      <option value="${safe(item.name)}">${safe(item.name)}</option>
-    `).join("")}
-  `;
-
-  if (available.some(item => item.name === previousValue)) {
-    select.value = previousValue;
-  }
-}
-
-/* Navigasi halaman */
 function showPage(page) {
   const pages = {
     beranda: "dashboardPage",
@@ -300,238 +168,625 @@ function showPage(page) {
   };
 
   Object.entries(pages).forEach(([key, id]) => {
-    $(id).classList.toggle("hidden", key !== page);
+    byId(id).classList.toggle("hidden", key !== page);
   });
 
-  document.querySelectorAll(".menu-link").forEach(button => {
-    button.classList.toggle(
-      "active",
-      button.dataset.page === page
+  document.querySelectorAll(".menu-link").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.page === page);
+  });
+
+  const info = pageInfo[page] || pageInfo.beranda;
+
+  byId("topTitle").textContent = info[0];
+  byId("pageTitle").textContent = info[1];
+  byId("pageDesc").textContent = info[2];
+
+  byId("addBtn").classList.toggle(
+    "hidden",
+    page !== "beranda" && page !== "dokumen"
+  );
+
+  byId("sidebar").classList.remove("open");
+
+  if (page === "beranda") renderDashboard();
+  if (page === "dokumen") renderDocuments();
+  if (page === "program") renderPrograms();
+  if (page === "departemen") renderDepartments();
+}
+
+/* DROPDOWN PROGRAM DAN DEPARTEMEN */
+
+function refreshSelects() {
+  const p = byId("programSelect");
+  const d = byId("departmentSelect");
+
+  const pValue = p.value;
+  const dValue = d.value;
+
+  p.innerHTML =
+    '<option value="">Pilih program</option>' +
+    data.programs
+      .filter(x => x.status === "Aktif")
+      .map(x => `
+        <option value="${escapeHTML(x.id)}">
+          ${escapeHTML(x.name)}
+        </option>
+      `)
+      .join("");
+
+  d.innerHTML =
+    '<option value="">Pilih departemen</option>' +
+    data.departments
+      .filter(x => x.status === "Aktif")
+      .map(x => `
+        <option value="${escapeHTML(x.id)}">
+          ${escapeHTML(x.name)}
+        </option>
+      `)
+      .join("");
+
+  if ([...p.options].some(o => o.value === pValue)) {
+    p.value = pValue;
+  }
+
+  if ([...d.options].some(o => o.value === dValue)) {
+    d.value = dValue;
+  }
+}
+
+function programName(id) {
+  return data.programs.find(x => x.id === id)?.name || "-";
+}
+
+function departmentName(id) {
+  return data.departments.find(x => x.id === id)?.name || "-";
+}
+
+/* DASHBOARD */
+
+function renderDashboard() {
+  const docs = data.documents;
+
+  const statuses = docs.map(x => getStatus(x.expires));
+
+  byId("totalCount").textContent = docs.length;
+
+  byId("activeCount").textContent =
+    statuses.filter(x => x === "Aktif").length;
+
+  byId("soonCount").textContent =
+    statuses.filter(x => x === "Akan Berakhir").length;
+
+  byId("inactiveCount").textContent =
+    statuses.filter(x => x === "Tidak Aktif").length;
+
+  const recent = [...docs]
+    .sort((a, b) =>
+      (b.createdAt || "").localeCompare(a.createdAt || "")
+    )
+    .slice(0, 5);
+
+  byId("recentRows").innerHTML = recent.map((doc, i) => `
+    <tr>
+      <td>${i + 1}</td>
+      <td class="doc-number">${escapeHTML(doc.number)}</td>
+      <td>${escapeHTML(doc.title)}</td>
+      <td>${escapeHTML(doc.type)}</td>
+      <td>${escapeHTML(programName(doc.program))}</td>
+      <td>${escapeHTML(departmentName(doc.department))}</td>
+      <td>${formatDate(doc.expires)}</td>
+      <td>${statusPill(getStatus(doc.expires))}</td>
+    </tr>
+  `).join("");
+
+  byId("recentEmpty").classList.toggle(
+    "hidden",
+    recent.length > 0
+  );
+}
+
+/* DATA IA / SK */
+
+function renderDocuments() {
+  const query = byId("searchInput").value.trim().toLowerCase();
+  const status = byId("statusFilter").value;
+  const type = byId("typeFilter").value;
+
+  const docs = [...data.documents]
+    .filter(doc => {
+      const matchesText =
+        `${doc.number} ${doc.title}`.toLowerCase().includes(query);
+
+      return (
+        matchesText &&
+        (!status || getStatus(doc.expires) === status) &&
+        (!type || doc.type === type)
+      );
+    })
+    .sort((a, b) =>
+      (b.createdAt || "").localeCompare(a.createdAt || "")
     );
+
+  byId("documentRows").innerHTML = docs.map((doc, i) => `
+    <tr>
+      <td>${i + 1}</td>
+      <td class="doc-number">${escapeHTML(doc.number)}</td>
+      <td>${escapeHTML(doc.title)}</td>
+      <td>${escapeHTML(doc.type)}</td>
+      <td>${escapeHTML(programName(doc.program))}</td>
+      <td>${escapeHTML(departmentName(doc.department))}</td>
+      <td>${formatDate(doc.issued)}</td>
+      <td>${formatDate(doc.expires)}</td>
+      <td>${statusPill(getStatus(doc.expires))}</td>
+      <td>
+        <div class="actions">
+          ${
+            doc.pdfData
+              ? `<button class="action-btn" data-action="view" data-id="${doc.id}">Lihat PDF</button>`
+              : `<button class="action-btn" disabled title="Tidak ada PDF">PDF -</button>`
+          }
+
+          <button
+            class="action-btn delete"
+            data-action="delete-doc"
+            data-id="${doc.id}">
+            Hapus
+          </button>
+        </div>
+      </td>
+    </tr>
+  `).join("");
+
+  byId("documentsEmpty").classList.toggle(
+    "hidden",
+    docs.length > 0
+  );
+}
+
+/* DAFTAR PROGRAM */
+
+function renderPrograms() {
+  byId("programCountLabel").textContent =
+    `Menampilkan ${data.programs.length} program.`;
+
+  byId("programList").innerHTML = data.programs.map((item, i) => `
+    <tr>
+      <td>${i + 1}</td>
+      <td><strong>${escapeHTML(item.name)}</strong></td>
+      <td>${escapeHTML(item.notes || "-")}</td>
+      <td>
+        <span class="mini-status ${
+          item.status === "Aktif" ? "is-active" : "is-inactive"
+        }">
+          ${escapeHTML(item.status)}
+        </span>
+      </td>
+      <td>
+        <button
+          class="action-btn delete"
+          data-action="delete-program"
+          data-id="${item.id}">
+          Hapus
+        </button>
+      </td>
+    </tr>
+  `).join("");
+
+  byId("programEmpty").classList.toggle(
+    "hidden",
+    data.programs.length > 0
+  );
+}
+
+/* DAFTAR DEPARTEMEN */
+
+function renderDepartments() {
+  byId("departmentCountLabel").textContent =
+    `Menampilkan ${data.departments.length} departemen.`;
+
+  byId("departmentList").innerHTML = data.departments.map((item, i) => `
+    <tr>
+      <td>${i + 1}</td>
+      <td><strong>${escapeHTML(item.name)}</strong></td>
+      <td>${escapeHTML(item.notes || "-")}</td>
+      <td>
+        <span class="mini-status ${
+          item.status === "Aktif" ? "is-active" : "is-inactive"
+        }">
+          ${escapeHTML(item.status)}
+        </span>
+      </td>
+      <td>
+        <button
+          class="action-btn delete"
+          data-action="delete-department"
+          data-id="${item.id}">
+          Hapus
+        </button>
+      </td>
+    </tr>
+  `).join("");
+
+  byId("departmentEmpty").classList.toggle(
+    "hidden",
+    data.departments.length > 0
+  );
+}
+
+/* RENDER SEMUA DATA */
+
+function renderAll() {
+  refreshSelects();
+  renderDashboard();
+  renderDocuments();
+  renderPrograms();
+  renderDepartments();
+}
+
+/* TOMBOL MODAL */
+
+byId("addBtn").addEventListener("click", () => {
+  openModal("modalBackdrop");
+});
+
+byId("closeModal").addEventListener("click", () => {
+  closeModal("modalBackdrop");
+});
+
+byId("cancelModal").addEventListener("click", () => {
+  closeModal("modalBackdrop");
+});
+
+/* MODAL PROGRAM */
+
+byId("addProgramBtn").addEventListener("click", () => {
+  openModal("programModalBackdrop");
+});
+
+byId("closeProgramModal").addEventListener("click", () => {
+  closeModal("programModalBackdrop");
+});
+
+byId("cancelProgramModal").addEventListener("click", () => {
+  closeModal("programModalBackdrop");
+});
+
+/* MODAL DEPARTEMEN */
+
+byId("addDepartmentBtn").addEventListener("click", () => {
+  openModal("departmentModalBackdrop");
+});
+
+byId("closeDepartmentModal").addEventListener("click", () => {
+  closeModal("departmentModalBackdrop");
+});
+
+byId("cancelDepartmentModal").addEventListener("click", () => {
+  closeModal("departmentModalBackdrop");
+});
+
+/* TUTUP MODAL */
+
+[
+  "modalBackdrop",
+  "programModalBackdrop",
+  "departmentModalBackdrop"
+].forEach(id => {
+  byId(id).addEventListener("click", event => {
+    if (event.target === byId(id)) {
+      closeModal(id);
+    }
   });
-
-  const names = {
-    beranda: [
-      "Beranda",
-      "Selamat datang, Administrator",
-      "Berikut ringkasan pengelolaan dokumen IA / SK."
-    ],
-    dokumen: [
-      "Data IA / SK",
-      "Data Dokumen IA / SK",
-      "Cari dan kelola arsip dokumen IA / SK."
-    ],
-    program: [
-      "Program",
-      "Program",
-      "Kelola data program yang digunakan dalam dokumen IA / SK."
-    ],
-    departemen: [
-      "Departemen",
-      "Departemen",
-      "Kelola data departemen yang digunakan dalam dokumen IA / SK."
-    ]
-  };
-
-  $("topTitle").textContent = names[page][0];
-  $("pageTitle").textContent = names[page][1];
-  $("pageDesc").textContent = names[page][2];
-
-  /* Tombol tambah hanya tampil pada halaman Data IA / SK */
-  $("addBtn").classList.toggle("hidden", page !== "dokumen");
-
-  $("sidebar").classList.remove("open");
-}
-
-/* Modal */
-function openModal() {
-  $("modalBackdrop").classList.remove("hidden");
-}
-
-function closeModal() {
-  $("modalBackdrop").classList.add("hidden");
-  $("documentForm").reset();
-}
-
-function toast(message) {
-  $("toast").textContent = message;
-  $("toast").classList.remove("hidden");
-
-  setTimeout(() => {
-    $("toast").classList.add("hidden");
-  }, 2600);
-}
-
-/* Event navigasi */
-document.querySelectorAll(".menu-link").forEach(button => {
-  button.addEventListener("click", () => {
-    showPage(button.dataset.page);
-  });
 });
 
-$("mobileMenu").addEventListener("click", () => {
-  $("sidebar").classList.toggle("open");
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape") {
+    [
+      "modalBackdrop",
+      "programModalBackdrop",
+      "departmentModalBackdrop"
+    ].forEach(closeModal);
+  }
 });
 
-$("viewAllBtn").addEventListener("click", () => {
-  showPage("dokumen");
-});
+/* SIMPAN DOKUMEN */
 
-$("addBtn").addEventListener("click", openModal);
-$("closeModal").addEventListener("click", closeModal);
-$("cancelModal").addEventListener("click", closeModal);
-
-$("modalBackdrop").addEventListener("click", event => {
-  if (event.target === $("modalBackdrop")) closeModal();
-});
-
-["searchInput", "statusFilter", "typeFilter"].forEach(id => {
-  $(id).addEventListener("input", renderDocuments);
-});
-
-/* Tambah dokumen */
-$("documentForm").addEventListener("submit", event => {
+byId("documentForm").addEventListener("submit", event => {
   event.preventDefault();
 
   const form = event.currentTarget;
-  const data = new FormData(form);
-  const file = form.elements.pdf.files[0];
-  const id = Date.now();
+  const fd = new FormData(form);
+  const file = fd.get("pdf");
+
+  if (file && file.size > 5 * 1024 * 1024) {
+    showToast("Ukuran PDF maksimal 5 MB.");
+    return;
+  }
 
   if (file && file.type !== "application/pdf") {
-    alert("Silakan pilih file PDF.");
+    showToast("File harus berformat PDF.");
     return;
   }
 
-  const program = data.get("program");
-  const department = data.get("department");
+  const saveDocument = pdfData => {
+    data.documents.push({
+      id: crypto.randomUUID
+        ? crypto.randomUUID()
+        : String(Date.now()),
 
-  if (!program || !department) {
-    alert("Silakan pilih Program dan Departemen.");
-    return;
-  }
+      number: fd.get("number").trim(),
+      type: fd.get("type"),
+      title: fd.get("title").trim(),
+      program: fd.get("program"),
+      department: fd.get("department"),
+      issued: fd.get("issued"),
+      expires: fd.get("expires"),
+      notes: fd.get("notes").trim(),
 
-  const doc = {
-    id,
-    number: data.get("number").trim(),
-    type: data.get("type"),
-    title: data.get("title").trim(),
-    program,
-    department,
-    issued: data.get("issued"),
-    expires: data.get("expires"),
-    notes: data.get("notes").trim(),
-    fileName: file ? file.name : ""
+      pdfName: file && file.size ? file.name : "",
+      pdfData: pdfData || "",
+      createdAt: new Date().toISOString()
+    });
+
+    saveData();
+    renderAll();
+    form.reset();
+    closeModal("modalBackdrop");
+
+    showToast("Dokumen berhasil disimpan.");
   };
 
-  docs.push(doc);
-  save();
+  if (file && file.size) {
+    const reader = new FileReader();
 
-  if (file) {
-    sessionFiles[id] = URL.createObjectURL(file);
-  }
+    reader.onload = () => {
+      saveDocument(reader.result);
+    };
 
-  closeModal();
-  render();
-  showPage("dokumen");
+    reader.onerror = () => {
+      showToast("File PDF gagal dibaca.");
+    };
 
-  toast("Dokumen berhasil ditambahkan.");
-});
-
-/* Aksi Lihat PDF dan Hapus */
-document.addEventListener("click", event => {
-  const button = event.target.closest("[data-action]");
-  if (!button) return;
-
-  const id = Number(button.dataset.id);
-  const doc = docs.find(item => item.id === id);
-
-  if (!doc) return;
-
-  if (button.dataset.action === "pdf") {
-    if (sessionFiles[id]) {
-      window.open(sessionFiles[id], "_blank", "noopener");
-    } else {
-      alert(
-        "File PDF belum tersedia. File PDF perlu diunggah kembali karena versi demo ini menyimpan file hanya sementara di browser."
-      );
-    }
-  }
-
-  if (button.dataset.action === "delete") {
-    if (confirm(`Yakin ingin menghapus dokumen "${doc.title}"?`)) {
-      docs = docs.filter(item => item.id !== id);
-
-      if (sessionFiles[id]) {
-        URL.revokeObjectURL(sessionFiles[id]);
-        delete sessionFiles[id];
-      }
-
-      save();
-      render();
-      toast("Dokumen berhasil dihapus.");
-    }
+    reader.readAsDataURL(file);
+  } else {
+    saveDocument("");
   }
 });
 
-/* Ekspor CSV */
-$("exportBtn").addEventListener("click", () => {
-  const rows = [
-    [
-      "Nomor IA/SK",
-      "Judul",
-      "Jenis",
-      "Program",
-      "Departemen",
-      "Tanggal Terbit",
-      "Berlaku Sampai",
-      "Status",
-      "Keterangan"
-    ],
-    ...docs.map(doc => [
-      doc.number,
-      doc.title,
-      doc.type,
-      doc.program,
-      doc.department,
-      doc.issued,
-      doc.expires,
-      statusOf(doc),
-      doc.notes || ""
-    ])
-  ];
+/* SIMPAN PROGRAM */
 
-  const csv = rows.map(row =>
-    row.map(value =>
-      `"${String(value ?? "").replace(/"/g, '""')}"`
-    ).join(",")
-  ).join("\r\n");
+byId("programForm").addEventListener("submit", event => {
+  event.preventDefault();
 
-  const blob = new Blob(["\ufeff" + csv], {
-    type: "text/csv;charset=utf-8;"
+  const fd = new FormData(event.currentTarget);
+  const name = fd.get("name").trim();
+
+  const duplicate = data.programs.some(
+    x => x.name.toLowerCase() === name.toLowerCase()
+  );
+
+  if (duplicate) {
+    showToast("Nama program sudah tersedia.");
+    return;
+  }
+
+  data.programs.push({
+    id: crypto.randomUUID
+      ? crypto.randomUUID()
+      : String(Date.now()),
+
+    name: name,
+    notes: fd.get("notes").trim(),
+    status: fd.get("status")
   });
 
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
+  saveData();
+  event.currentTarget.reset();
+  closeModal("programModalBackdrop");
+  renderAll();
 
-  link.href = url;
-  link.download = "data-arsip-ia-sk.csv";
-
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-
-  URL.revokeObjectURL(url);
+  showToast("Program berhasil ditambahkan.");
 });
 
-/* Keluar */
-$("logoutBtn").addEventListener("click", () => {
-  if (confirm("Apakah Anda yakin ingin keluar?")) {
-    sessionStorage.removeItem("arsipDemoLogin");
-    window.location.href = "login.html";
+/* SIMPAN DEPARTEMEN */
+
+byId("departmentForm").addEventListener("submit", event => {
+  event.preventDefault();
+
+  const fd = new FormData(event.currentTarget);
+  const name = fd.get("name").trim();
+
+  const duplicate = data.departments.some(
+    x => x.name.toLowerCase() === name.toLowerCase()
+  );
+
+  if (duplicate) {
+    showToast("Nama departemen sudah tersedia.");
+    return;
+  }
+
+  data.departments.push({
+    id: crypto.randomUUID
+      ? crypto.randomUUID()
+      : String(Date.now()),
+
+    name: name,
+    notes: fd.get("notes").trim(),
+    status: fd.get("status")
+  });
+
+  saveData();
+  event.currentTarget.reset();
+  closeModal("departmentModalBackdrop");
+  renderAll();
+
+  showToast("Departemen berhasil ditambahkan.");
+});
+
+/* AKSI TABEL */
+
+document.addEventListener("click", event => {
+  const button = event.target.closest("[data-action]");
+
+  if (!button) return;
+
+  const { action, id } = button.dataset;
+
+  /* LIHAT PDF */
+  if (action === "view") {
+    const doc = data.documents.find(x => x.id === id);
+
+    if (doc?.pdfData) {
+      const win = window.open();
+
+      if (win) {
+        win.document.write(`
+          <title>${escapeHTML(doc.pdfName || "Dokumen PDF")}</title>
+          <iframe
+            src="${doc.pdfData}"
+            style="border:0;width:100%;height:100vh">
+          </iframe>
+        `);
+
+        win.document.close();
+      } else {
+        showToast("Izinkan pop-up browser untuk melihat PDF.");
+      }
+    }
+  }
+
+  /* HAPUS DOKUMEN */
+  if (
+    action === "delete-doc" &&
+    confirm("Hapus dokumen ini?")
+  ) {
+    data.documents = data.documents.filter(
+      x => x.id !== id
+    );
+
+    saveData();
+    renderAll();
+
+    showToast("Dokumen berhasil dihapus.");
+  }
+
+  /* HAPUS PROGRAM */
+  if (
+    action === "delete-program" &&
+    confirm("Hapus program ini? Dokumen terkait akan tetap tersimpan.")
+  ) {
+    data.programs = data.programs.filter(
+      x => x.id !== id
+    );
+
+    saveData();
+    renderAll();
+
+    showToast("Program berhasil dihapus.");
+  }
+
+  /* HAPUS DEPARTEMEN */
+  if (
+    action === "delete-department" &&
+    confirm("Hapus departemen ini? Dokumen terkait akan tetap tersimpan.")
+  ) {
+    data.departments = data.departments.filter(
+      x => x.id !== id
+    );
+
+    saveData();
+    renderAll();
+
+    showToast("Departemen berhasil dihapus.");
   }
 });
 
-/* Tampilkan data awal */
-saveGroups();
-render();
+/* PENCARIAN DAN FILTER */
+
+["searchInput", "statusFilter", "typeFilter"].forEach(id => {
+  byId(id).addEventListener(
+    id === "searchInput" ? "input" : "change",
+    renderDocuments
+  );
+});
+
+/* NAVIGASI */
+
+byId("viewAllBtn").addEventListener("click", () => {
+  showPage("dokumen");
+});
+
+document.querySelectorAll(".menu-link").forEach(btn => {
+  btn.addEventListener("click", () => {
+    showPage(btn.dataset.page);
+  });
+});
+
+byId("mobileMenu").addEventListener("click", () => {
+  byId("sidebar").classList.toggle("open");
+});
+
+/* KELUAR */
+
+byId("logoutBtn").addEventListener("click", () => {
+  if (confirm("Keluar dari halaman demo Arsip IA / SK?")) {
+    showToast("Ini merupakan demo statis, tidak ada sesi login yang aktif.");
+  }
+});
+
+/* EKSPOR CSV */
+
+byId("exportBtn").addEventListener("click", () => {
+  const headers = [
+    "Nomor IA/SK",
+    "Judul Dokumen",
+    "Jenis",
+    "Program",
+    "Departemen",
+    "Tanggal Terbit",
+    "Berlaku Sampai",
+    "Status",
+    "Keterangan"
+  ];
+
+  const rows = data.documents.map(doc => [
+    doc.number,
+    doc.title,
+    doc.type,
+    programName(doc.program),
+    departmentName(doc.department),
+    doc.issued,
+    doc.expires,
+    getStatus(doc.expires),
+    doc.notes
+  ]);
+
+  const csv = [headers, ...rows]
+    .map(row =>
+      row.map(value =>
+        `"${String(value ?? "").replace(/"/g, '""')}"`
+      ).join(";")
+    )
+    .join("\r\n");
+
+  const blob = new Blob(
+    ["\uFEFF" + csv],
+    { type: "text/csv;charset=utf-8;" }
+  );
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+
+  a.href = url;
+  a.download = "data_arsip_ia_sk.csv";
+  a.click();
+
+  URL.revokeObjectURL(url);
+
+  showToast("File CSV berhasil diekspor.");
+});
+
+/* JALANKAN APLIKASI */
+
+renderAll();
+showPage("beranda");
