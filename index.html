@@ -1,65 +1,395 @@
-<!-- PROGRAM -->
-<section id="programPage" class="hidden">
-  <section class="panel">
-    <div class="panel-head management-head">
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Arsip IA / SK</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-icon">▤</div>
       <div>
-        <h2>Daftar Program</h2>
-        <p id="programCountLabel">Menampilkan data program.</p>
+        <strong>Arsip IA / SK</strong>
+        <small>Document Management</small>
       </div>
-      <button class="btn btn-primary" id="addProgramBtn">
-        + Tambah Program
-      </button>
     </div>
 
-    <div class="table-wrap">
-      <table class="management-table">
-        <thead>
-          <tr>
-            <th>No.</th>
-            <th>Nama Program</th>
-            <th>Keterangan</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody id="programList"></tbody>
-      </table>
-    </div>
+    <nav class="menu">
+      <button class="menu-link active" data-page="beranda">⌂ <span>Beranda</span></button>
+      <button class="menu-link" data-page="dokumen">▤ <span>Data IA / SK</span></button>
+      <button class="menu-link" data-page="program">▦ <span>Program</span></button>
+      <button class="menu-link" data-page="departemen">▥ <span>Departemen</span></button>
+    </nav>
 
-    <div id="programEmpty" class="empty-state hidden">
-      Belum ada data program.
+    <div class="sidebar-bottom">
+      <div class="admin-profile">
+        <div class="avatar">A</div>
+        <div>
+          <strong>Admin</strong>
+          <small>Administrator</small>
+        </div>
+      </div>
+      <button class="logout-link" id="logoutBtn">↪ Keluar</button>
     </div>
-  </section>
-</section>
+  </aside>
 
-<!-- DEPARTEMEN -->
-<section id="departemenPage" class="hidden">
-  <section class="panel">
-    <div class="panel-head management-head">
+  <main class="main">
+    <header class="topbar">
+      <button class="mobile-menu" id="mobileMenu">☰</button>
       <div>
-        <h2>Daftar Departemen</h2>
-        <p id="departmentCountLabel">Menampilkan data departemen.</p>
+        <strong id="topTitle">Beranda</strong>
+        <small>Pengelolaan dokumen IA / SK</small>
       </div>
-      <button class="btn btn-primary" id="addDepartmentBtn">
-        + Tambah Departemen
-      </button>
-    </div>
+      <div class="top-right">
+        <span class="status-dot"></span> Sistem Demo
+      </div>
+    </header>
 
-    <div class="table-wrap">
-      <table class="management-table">
-        <thead>
-          <tr>
-            <th>No.</th>
-            <th>Nama Departemen</th>
-            <th>Keterangan</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody id="departmentList"></tbody>
-      </table>
-    </div>
+    <section class="content">
+      <div class="page-heading">
+        <div>
+          <h1 id="pageTitle">Selamat datang, Admin</h1>
+          <p id="pageDesc">Berikut ringkasan pengelolaan dokumen IA / SK.</p>
+        </div>
+        <button class="btn btn-primary" id="addBtn">＋ Tambah Dokumen</button>
+      </div>
 
-    <div id="departmentEmpty" class="empty-state hidden">
-      Belum ada data departemen.
+      <!-- BERANDA -->
+      <section id="dashboardPage">
+        <div class="stats">
+          <article class="stat-card">
+            <div class="stat-label">Total Dokumen</div>
+            <strong id="totalCount">0</strong>
+            <div class="stat-note">Seluruh dokumen tersimpan</div>
+          </article>
+
+          <article class="stat-card">
+            <div class="stat-label">Aktif</div>
+            <strong id="activeCount">0</strong>
+            <div class="stat-note"><span class="dot green"></span>Masih berlaku</div>
+          </article>
+
+          <article class="stat-card">
+            <div class="stat-label">Akan Berakhir</div>
+            <strong id="soonCount">0</strong>
+            <div class="stat-note"><span class="dot yellow"></span>Dalam 30 hari</div>
+          </article>
+
+          <article class="stat-card">
+            <div class="stat-label">Tidak Aktif</div>
+            <strong id="inactiveCount">0</strong>
+            <div class="stat-note"><span class="dot red"></span>Masa berlaku habis</div>
+          </article>
+        </div>
+
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <h2>Dokumen Terbaru</h2>
+              <p>Daftar dokumen IA / SK yang terakhir ditambahkan.</p>
+            </div>
+            <button class="text-button" id="viewAllBtn">Lihat Semua →</button>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>No.</th>
+                  <th>Nomor IA / SK</th>
+                  <th>Judul Dokumen</th>
+                  <th>Jenis</th>
+                  <th>Program</th>
+                  <th>Departemen</th>
+                  <th>Berlaku Sampai</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="recentRows"></tbody>
+            </table>
+          </div>
+
+          <div class="empty-state hidden" id="recentEmpty">
+            Belum ada dokumen. Klik Tambah Dokumen untuk mulai mengisi arsip.
+          </div>
+        </section>
+      </section>
+
+      <!-- DATA IA / SK -->
+      <section id="documentsPage" class="hidden">
+        <section class="panel">
+          <div class="toolbar">
+            <div class="searchbox">
+              <span>⌕</span>
+              <input id="searchInput" type="search"
+                placeholder="Cari nomor atau judul dokumen...">
+            </div>
+
+            <select id="statusFilter">
+              <option value="">Semua Status</option>
+              <option>Aktif</option>
+              <option>Akan Berakhir</option>
+              <option>Tidak Aktif</option>
+            </select>
+
+            <select id="typeFilter">
+              <option value="">Semua Jenis</option>
+              <option>IA</option>
+              <option>SK</option>
+            </select>
+
+            <button class="btn btn-outline" id="exportBtn">Ekspor CSV</button>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>No.</th>
+                  <th>Nomor IA / SK</th>
+                  <th>Judul Dokumen</th>
+                  <th>Jenis</th>
+                  <th>Program</th>
+                  <th>Departemen</th>
+                  <th>Tanggal Terbit</th>
+                  <th>Berlaku Sampai</th>
+                  <th>Status</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="documentRows"></tbody>
+            </table>
+          </div>
+
+          <div class="empty-state hidden" id="documentsEmpty">
+            Data tidak ditemukan.
+          </div>
+        </section>
+      </section>
+
+      <!-- PROGRAM -->
+      <section id="programPage" class="hidden">
+        <section class="panel">
+          <div class="panel-head management-head">
+            <div>
+              <h2>Daftar Program</h2>
+              <p id="programCountLabel">Menampilkan data program.</p>
+            </div>
+            <button class="btn btn-primary" id="addProgramBtn">
+              ＋ Tambah Program
+            </button>
+          </div>
+
+          <div class="table-wrap">
+            <table class="management-table">
+              <thead>
+                <tr>
+                  <th>No.</th>
+                  <th>Nama Program</th>
+                  <th>Keterangan</th>
+                  <th>Status</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="programList"></tbody>
+            </table>
+          </div>
+
+          <div id="programEmpty" class="empty-state hidden">
+            Belum ada data program.
+          </div>
+        </section>
+      </section>
+
+      <!-- DEPARTEMEN -->
+      <section id="departemenPage" class="hidden">
+        <section class="panel">
+          <div class="panel-head management-head">
+            <div>
+              <h2>Daftar Departemen</h2>
+              <p id="departmentCountLabel">Menampilkan data departemen.</p>
+            </div>
+            <button class="btn btn-primary" id="addDepartmentBtn">
+              ＋ Tambah Departemen
+            </button>
+          </div>
+
+          <div class="table-wrap">
+            <table class="management-table">
+              <thead>
+                <tr>
+                  <th>No.</th>
+                  <th>Nama Departemen</th>
+                  <th>Keterangan</th>
+                  <th>Status</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="departmentList"></tbody>
+            </table>
+          </div>
+
+          <div id="departmentEmpty" class="empty-state hidden">
+            Belum ada data departemen.
+          </div>
+        </section>
+      </section>
+
+      <footer>
+        Arsip IA / SK <span>•</span> Versi demo statis untuk GitHub Pages
+      </footer>
+    </section>
+  </main>
+
+  <!-- MODAL TAMBAH DOKUMEN -->
+  <div class="modal-backdrop hidden" id="modalBackdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <div>
+          <h2>Tambah Dokumen</h2>
+          <p>Lengkapi informasi dokumen IA / SK.</p>
+        </div>
+        <button class="close-btn" id="closeModal">×</button>
+      </div>
+
+      <form id="documentForm">
+        <div class="form-grid">
+          <label>Nomor IA / SK
+            <input name="number" required placeholder="Contoh: 001/SK/2026">
+          </label>
+
+          <label>Jenis Dokumen
+            <select name="type" required>
+              <option value="IA">IA</option>
+              <option value="SK">SK</option>
+            </select>
+          </label>
+
+          <label class="full">Judul Dokumen
+            <input name="title" required placeholder="Masukkan judul dokumen">
+          </label>
+
+          <label>Program
+            <select name="program" id="programSelect" required>
+              <option value="">Pilih program</option>
+            </select>
+          </label>
+
+          <label>Departemen
+            <select name="department" id="departmentSelect" required>
+              <option value="">Pilih departemen</option>
+            </select>
+          </label>
+
+          <label>Tanggal Terbit
+            <input name="issued" type="date" required>
+          </label>
+
+          <label>Berlaku Sampai
+            <input name="expires" type="date">
+          </label>
+
+          <label class="full">Keterangan
+            <textarea name="notes" rows="3"
+              placeholder="Keterangan tambahan (opsional)"></textarea>
+          </label>
+
+          <label class="full">File PDF (opsional)
+            <input name="pdf" type="file" accept="application/pdf">
+            <small class="hint">
+              File PDF disimpan sementara di browser. Maksimal 5 MB.
+            </small>
+          </label>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-outline" id="cancelModal">Batal</button>
+          <button type="submit" class="btn btn-primary">Simpan Dokumen</button>
+        </div>
+      </form>
     </div>
-  </section>
-</section>
+  </div>
+
+  <!-- MODAL TAMBAH PROGRAM -->
+  <div class="modal-backdrop hidden" id="programModalBackdrop">
+    <div class="modal small-modal">
+      <div class="modal-header">
+        <div>
+          <h2>Tambah Program</h2>
+          <p>Masukkan informasi program baru.</p>
+        </div>
+        <button class="close-btn" id="closeProgramModal">×</button>
+      </div>
+
+      <form id="programForm">
+        <div class="form-grid single-grid">
+          <label>Nama Program
+            <input name="name" required placeholder="Masukkan nama program">
+          </label>
+
+          <label>Keterangan
+            <textarea name="notes" rows="3"
+              placeholder="Keterangan (opsional)"></textarea>
+          </label>
+
+          <label>Status
+            <select name="status">
+              <option>Aktif</option>
+              <option>Tidak Aktif</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-outline" id="cancelProgramModal">Batal</button>
+          <button type="submit" class="btn btn-primary">Simpan Program</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL TAMBAH DEPARTEMEN -->
+  <div class="modal-backdrop hidden" id="departmentModalBackdrop">
+    <div class="modal small-modal">
+      <div class="modal-header">
+        <div>
+          <h2>Tambah Departemen</h2>
+          <p>Masukkan informasi departemen baru.</p>
+        </div>
+        <button class="close-btn" id="closeDepartmentModal">×</button>
+      </div>
+
+      <form id="departmentForm">
+        <div class="form-grid single-grid">
+          <label>Nama Departemen
+            <input name="name" required placeholder="Masukkan nama departemen">
+          </label>
+
+          <label>Keterangan
+            <textarea name="notes" rows="3"
+              placeholder="Keterangan (opsional)"></textarea>
+          </label>
+
+          <label>Status
+            <select name="status">
+              <option>Aktif</option>
+              <option>Tidak Aktif</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-outline" id="cancelDepartmentModal">Batal</button>
+          <button type="submit" class="btn btn-primary">Simpan Departemen</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="toast hidden" id="toast" role="status"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
